@@ -1,0 +1,572 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="es">
+
+	<!-- 中标结果查看关联 -->
+	<resultMap type="com.cmcc.es.app.model.ProjectInfo" id="normalResultMap">
+		<result column="is_open" property="is_open" />
+		<result column="is_zgys" property="is_zgys" />
+		<result column="project_id" property="project_id" />
+		<result column="project_code" property="project_code" />
+		<result column="project_name" property="project_name" />
+		<result column="purchase" property="purchase" />
+		<result column="purchase_style_name" property="purchase_style_name" />
+		<result column="status_name" property="status_name" />
+		<result column="stop_time" property="stop_time" />
+		<collection property="project_tender_info" resultMap="tenderResultMap"></collection>
+	</resultMap>
+
+	<resultMap type="com.cmcc.es.app.model.TenderInfo" id="tenderResultMap">
+		<result column="tender_id" property="tender_id" />
+		<result column="tender_name" property="tender_name" />
+		<collection property="packages" resultMap="packageResultMap"></collection>
+	</resultMap>
+
+	<resultMap type="com.cmcc.es.app.model.PackageInfo" id="packageResultMap">
+		<result column="package_id" property="package_id" />
+		<result column="package_name" property="package_name" />
+		<result column="tender_id" property="tender_id" />
+	</resultMap>
+
+
+	<!-- 中标结果查看 -->
+	<select id="normal" resultMap="normalResultMap" parameterType="java.util.Map">
+		<!-- SELECT pbi.is_open,pbi.is_zgys,pbi.project_id,pbi.project_code,pbi.project_name,pbi.purchase,pbi.purchase_style_name,pbi.status_name,pbi.stop_time, 
+			t.tender_id,tender_name,package_id, p.package_name,p.tender_id, si.supplier_id 
+			FROM project_base_info pbi,project_tender_info t, project_package_info p,project_supplier_info 
+			s,supplier_info si <where> pbi.project_id = t.project_id and pbi.project_id 
+			= s.project_id and pbi.project_id = p.project_id and s.supplier_id= si.supplier_id 
+			and p.tender_id = t.tender_id and pbi.is_zgys_end = '1' and si.supplier_id=#{supplier_id} 
+			</where> -->
+		SELECT DISTINCT
+		is_open,
+		is_zgys,
+		project_id,
+		project_code,
+		project_name,
+		purchase,
+		purchase_style_name,
+		status_name,
+		stop_time,
+		tender_id,
+		tender_name,
+		package_id,
+		package_name,
+		supplier_id
+		FROM
+		(
+		SELECT DISTINCT
+		pb.is_open,
+		pb.is_zgys,
+		pb.project_id,
+		pb.project_code,
+		pb.project_name,
+		pb.purchase,
+		pb.purchase_style_name,
+		pb.status_name,
+		pb.stop_time,
+		t.tender_id,
+		t.tender_name,
+		p.package_id,
+		p.package_name,
+		si.supplier_id
+		FROM
+		project_base_info pb,
+		project_tender_info t,
+		project_package_info p,
+		project_supplier_info s,
+		supplier_info si
+		WHERE
+		t.tender_id IS NOT NULL
+		AND pb.project_id = p.project_id
+		AND pb.project_id = t.project_id
+		AND
+		p.tender_id = t.tender_id
+		AND pb.project_id = s.project_id
+		AND
+		s.supplier_id = si.supplier_id
+		AND pb.is_zgys = '0'
+		AND si.supplier_id =
+		#{supplier_id}
+		UNION ALL
+		SELECT DISTINCT
+		pb.is_open,
+		pb.is_zgys,
+		pb.project_id,
+		pb.project_code,
+		pb.project_name,
+		pb.purchase,
+		pb.purchase_style_name,
+		pb.status_name,
+		pb.stop_time,
+		NULL,
+		'标1',
+		p.package_id,
+		p.package_name,
+		si.supplier_id
+		FROM
+		project_base_info pb,
+		project_package_info p,
+		project_supplier_info s,
+		supplier_info si
+		WHERE
+		p.tender_id IS NULL
+		AND pb.project_id = p.project_id
+		AND pb.project_id =
+		s.project_id
+		AND s.supplier_id = si.supplier_id
+		AND pb.is_zgys = '0'
+		AND
+		si.supplier_id = #{supplier_id}
+		) x order by x.stop_time
+		desc,x.package_name
+	</select>
+
+	<!-- 资格预审结果查看 -->
+	<select id="zgys" resultMap="normalResultMap" parameterType="java.util.Map">
+		SELECT DISTINCT
+		is_open,
+		is_zgys,
+		project_id,
+		project_code,
+		project_name,
+		purchase,
+		purchase_style_name,
+		status_name,
+		stop_time,
+		tender_id,
+		tender_name,
+		package_id,
+		package_name,
+		supplier_id
+		FROM
+		(
+		SELECT DISTINCT
+		pb.is_open,
+		pb.is_zgys,
+		pb.project_id,
+		pb.project_code,
+		pb.project_name,
+		pb.purchase,
+		pb.purchase_style_name,
+		pb.status_name,
+		pb.stop_time,
+		t.tender_id,
+		t.tender_name,
+		p.package_id,
+		p.package_name,
+		si.supplier_id
+		FROM
+		project_base_info pb,
+		project_tender_info t,
+		project_package_info p,
+		project_supplier_info s,
+		supplier_info si
+		WHERE
+		t.tender_id IS NOT NULL
+		AND pb.project_id = p.project_id
+		AND pb.project_id = t.project_id
+		AND
+		p.tender_id = t.tender_id
+		AND pb.project_id = s.project_id
+		AND
+		s.supplier_id = si.supplier_id
+		AND pb.is_zgys = '1'
+		AND si.supplier_id =
+		#{supplier_id}
+		UNION ALL
+		SELECT DISTINCT
+		pb.is_open,
+		pb.is_zgys,
+		pb.project_id,
+		pb.project_code,
+		pb.project_name,
+		pb.purchase,
+		pb.purchase_style_name,
+		pb.status_name,
+		pb.stop_time,
+		NULL,
+		'标1',
+		p.package_id,
+		p.package_name,
+		si.supplier_id
+		FROM
+		project_base_info pb,
+		project_package_info p,
+		project_supplier_info s,
+		supplier_info si
+		WHERE
+		p.tender_id IS NULL
+		AND pb.project_id = p.project_id
+		AND pb.project_id =
+		s.project_id
+		AND s.supplier_id = si.supplier_id
+		AND pb.is_zgys = '1'
+		AND
+		si.supplier_id = #{supplier_id}
+		) x order by x.stop_time
+		desc,x.package_name
+	</select>
+
+	<!-- 我的消息列表 -->
+	<select id="mymessage" resultType="java.util.Map" parameterType="java.util.Map">
+		SELECT
+		t1.message_id,t1.message,t1.message_type,DATE_FORMAT(t1.receive_time,'%Y-%m-%d
+		%H:%i:%s') receive_time FROM
+		supplier_message t1,supplier_info t2
+		<where>
+			t1.supplier_id = t2.supplier_id
+			AND t1.message_type='1'
+			<if test="supplier_id != null and supplier_id != ''">
+				AND t1.supplier_id = #{supplier_id}
+			</if>
+		</where>
+		ORDER BY t1.receive_time DESC
+	</select>
+
+	<!-- 我的资格预审消息 -->
+	<select id="zgysmessage" resultType="java.util.Map"
+		parameterType="java.util.Map">
+		SELECT
+		t1.message_id,t1.message,t1.message_type,DATE_FORMAT(t1.receive_time,'%Y-%m-%d
+		%H:%i:%s') receive_time FROM
+		supplier_message t1,supplier_info t2
+		<where>
+			t1.supplier_id = t2.supplier_id
+			AND t1.message_type='2'
+			<if test="supplier_id != null and supplier_id != ''">
+				AND t1.supplier_id = #{supplier_id}
+			</if>
+		</where>
+		ORDER BY t1.receive_time DESC
+	</select>
+
+	<!-- 通知书信息 -->
+	<select id="suppliernotice" resultType="java.util.Map"
+		parameterType="java.util.Map">
+		SELECT DISTINCT n._id,content,n.package_id,title FROM
+		project_notice_info
+		n,project_base_info b,project_package_info
+		p,notice_supplier_info nsi
+		WHERE
+		n.project_id = b.project_id and
+		n.package_id = p.package_id
+		AND n.project_id =
+		#{project_id}
+		AND
+		n.package_id = #{package_id}
+		AND nsi.supplier_id =
+		#{supplier_id}
+		AND
+		n.notice_id = nsi.notice_id
+		ORDER BY n._id desc
+	</select>
+
+	<!-- 我的资格预审项目 -->
+	<select id="zgysproject" resultType="java.util.Map"
+		parameterType="java.util.Map">
+		select DISTINCT
+		d.agent_name,d.big_status_name,d.project_code,d.is_check,d.is_dele,d.is_fail,d.is_zgys,d.material_type_name,
+		d.project_name,DATE_FORMAT(d.project_time,'%Y-%m-%d %H:%i:%s')
+		project_time,d.purchase_style_id,d.purchase_style_name,d.small_status_name,d.staff_name
+		from project_detail_info d
+		<choose>
+			<when test="user_type == 'zj'">,project_expert_info e,expert_info i</when>
+			<otherwise></otherwise>
+		</choose>
+		<where>
+			<choose>
+				<when test="user_type == 'zj'">
+					d.project_id = e.project_id
+					and e.expert_id=i.user_id
+					and
+				</when>
+				<otherwise></otherwise>
+			</choose>
+			is_zgys='1'
+			<choose>
+				<when test="user_type == 'zj'">
+					and i.user_id=#{user_id}
+				</when>
+				<when test="user_type == 'dljg'">
+					and d.agent_id=#{user_id}
+				</when>
+				<when test="user_type == 'nbyg'">
+					and d.staff_id=#{user_id}
+				</when>
+				<when test="user_type == 'zj'">
+					and e.expert_id=#{user_id}
+				</when>
+				<otherwise>
+
+				</otherwise>
+			</choose>
+		</where>
+		order by d.PROJECT_TIME desc
+	</select>
+
+	<!-- 我的项目 -->
+	<select id="myproject" resultType="java.util.Map" parameterType="java.util.Map">
+		select DISTINCT
+		d.agent_name,d.big_status_name,d.project_code,d.is_check,d.is_dele,d.is_fail,d.is_zgys,d.material_type_name,
+		d.project_name,DATE_FORMAT(d.project_time,'%Y-%m-%d %H:%i:%s')
+		project_time,d.purchase_style_id,d.purchase_style_name,d.small_status_name,d.staff_name
+		from project_detail_info d
+		<choose>
+			<when test="user_type == 'zj'">,project_expert_info e,expert_info i</when>
+			<otherwise></otherwise>
+		</choose>
+		<where>
+			<choose>
+				<when test="user_type == 'zj'">
+					d.project_id = e.project_id
+					and e.expert_id=i.user_id
+					and
+				</when>
+				<otherwise></otherwise>
+			</choose>
+			is_zgys='0'
+			<choose>
+				<when test="user_type == 'zj'">
+					and i.user_id=#{user_id}
+				</when>
+				<when test="user_type == 'dljg'">
+					and d.agent_id=#{user_id}
+				</when>
+				<when test="user_type == 'nbyg'">
+					and d.staff_id=#{user_id}
+				</when>
+				<when test="user_type == 'zj'">
+					and e.expert_id=#{user_id}
+				</when>
+				<otherwise>
+
+				</otherwise>
+			</choose>
+		</where>
+		order by d.PROJECT_TIME desc
+	</select>
+
+	<!-- 专家信息查询 -->
+	<select id="expertdetail" resultType="java.util.Map"
+		parameterType="java.util.Map">
+		select company,expert_level_name,user_name,user_id from
+		EXPERT_INFO
+		<where>
+			<if test="user_id != null and user_id != ''">
+				user_id=#{user_id}
+			</if>
+		</where>
+		order by update_time desc
+	</select>
+
+	<!-- 供应商信息 -->
+	<select id="supplierdetail" resultType="java.util.Map"
+		parameterType="java.util.Map">
+		select
+		business_range,communication_address,company_property_name,contact_person_email,contact_person_mobile,
+		fax,found_time,legal_person,paiclup_capital,phone,registry_address,registry_fund,state_name,stock_plac,
+		stock_status,supplier_name,supplier_id,supplier_type_name,user_id from
+		supplier_info
+		<where>
+			<if test="user_id != null and user_id != ''">
+				user_id=#{user_id}
+			</if>
+		</where>
+		order by update_time desc
+	</select>
+
+	<!-- 招标代理信息 -->
+	<select id="agentdetail" resultType="java.util.Map"
+		parameterType="java.util.Map">
+		select bank_account,code_type_id,user_name,user_id from AGENT_INFO
+		<where>
+			<if test="user_id != null and user_id !=''">
+				user_id=#{user_id}
+			</if>
+		</where>
+		order by update_time desc
+	</select>
+	<!-- 通知列表公共过滤条件 -->
+	<!-- 通知列表公共过滤条件 -->
+	<sql id="noticelist_condition">
+		<choose>
+			<!-- 地区级别为2级并传递了来源id -->
+			<when test="region_level != 1 and source_id != null and source_id !=''">
+				<bind name="array_source_id" value="_parameter.get('source_id').split(',')" />
+				AND a.source_id IN
+				<foreach collection="array_source_id" open="(" close=")"
+					item="item" index="index" separator=",">
+					#{item}
+				</foreach>
+			</when>
+			<!-- 地址级别为1级并传递了来源id -->
+			<when test="region_level == 1 and source_id != null and source_id !=''">
+				AND a.source_id IN (
+				SELECT
+				r.region_id
+				FROM region_info
+				r where r.parent_id = #{source_id})
+			</when>
+		</choose>
+		<!-- 大类id -->
+		<if test="catalog_big_id != null and catalog_big_id !=''">
+			<bind name="array_big_id" value="_parameter.get('catalog_big_id').split(',')" />
+			AND b.catalog_big_id IN
+			<foreach collection="array_big_id" open="(" close=")" item="item"
+				index="index" separator=",">
+				#{item}
+			</foreach>
+		</if>
+		<!-- 中类id -->
+		<if test="catalog_middle_id != null and catalog_middle_id !=''">
+			<bind name="array_middle_id" value="_parameter.get('catalog_middle_id').split(',')" />
+			AND b.catalog_middle_id IN
+			<foreach collection="array_middle_id" open="(" close=")"
+				item="item" index="index" separator=",">
+				#{item}
+			</foreach>
+		</if>
+		<!-- 小类id -->
+		<if test="catalog_small_id != null and catalog_small_id !=''">
+			<bind name="array_small_id" value="_parameter.get('catalog_small_id').split(',')" />
+			AND b.catalog_small_id IN
+			<foreach collection="array_small_id" open="(" close=")" item="item"
+				index="index" separator=",">
+				#{item}
+			</foreach>
+		</if>
+		<if test="pub_time != null and pub_time  !=''">
+			AND a.pub_time >= #{pub_time}
+		</if>
+		<if test="keywords != null and keywords  !=''">
+			<!-- <bind name="array_keywords" value="_parameter.get('keywords').split(',')" 
+				/> -->
+			AND a.title regexp replace (#{keywords},',','|')
+		</if>
+	</sql>
+	<!-- <sql id="noticelist_condition"> <if test="source_id != null and source_id 
+		!=''"> AND a.source_id=#{source_id} </if> <if test="catalog_big_id != null 
+		and catalog_big_id !=''"> AND b.catalog_big_id=#{catalog_big_id} </if> <if 
+		test="catalog_middle_id != null and catalog_middle_id !=''"> AND b.catalog_middle_id=right(#{catalog_middle_id},2) 
+		</if> <if test="catalog_small_id != null and catalog_small_id !=''"> AND 
+		b.catalog_small_id=right(#{catalog_small_id},2) </if> <if test="pub_time 
+		!= null and pub_time !=''"> AND a.pub_time >= #{pub_time} </if> <if test="keywords 
+		!= null and keywords !=''"> <bind name="keywords" value="'%' + _parameter.get('keywords') 
+		+ '%'" /> AND a.title like #{keywords} </if> </sql> -->
+	<!-- 正在招标 -->
+	<select id="zzzblist" resultType="java.util.Map" parameterType="java.util.Map">
+		<![CDATA[
+		SELECT distinct a.notice_id,a.source_id,a.source_name,a.title,a.back_date,a.tender_sale_deadline,a.pub_time FROM notice_info a,notice_product_info b
+		WHERE a.notice_id = b.notice_id 
+		AND a.tender_sale_deadline > now()
+		]]>
+		<include refid="noticelist_condition" />
+		order by a.tender_sale_deadline asc,a.title
+	</select>
+	<!-- 即将开标 -->
+	<!-- <select id="jjkblist" resultType="java.util.Map" parameterType="java.util.Map"> 
+		<![CDATA[ SELECT * FROM notice_info a,notice_product_info b WHERE a.notice_id 
+		= b.notice_id AND a.back_date > now() AND a.tender_sale_deadline < now() 
+		]]> <include refid="noticelist_condition" /> order by a.pub_time desc </select> -->
+	<select id="jjkblist" resultType="java.util.Map" parameterType="java.util.Map">
+		<![CDATA[
+		SELECT distinct a.notice_id,a.source_id,a.source_name,a.title,a.back_date,a.tender_sale_deadline,a.pub_time FROM notice_info a,notice_product_info b
+		WHERE a.notice_id = b.notice_id 
+		AND a.back_date > now()
+		and a.tender_sale_deadline < now()
+		]]>
+		<include refid="noticelist_condition" />
+		order by a.back_date asc
+	</select>
+	<!-- 正在公示 -->
+	<select id="zzgslist" resultType="java.util.Map" parameterType="java.util.Map">
+		<![CDATA[
+		SELECT distinct a.notice_id,a.source_id,a.source_name,a.title,a.start_time,a.end_time,a.pub_time FROM notice_info a,notice_product_info b
+		WHERE a.notice_id = b.notice_id 
+		AND a.start_time < now()
+		AND a.end_time >= now() 
+		]]>
+		<include refid="noticelist_condition" />
+		order by a.pub_time asc
+	</select>
+	<!-- 采购公告 -->
+	<select id="cggglist" resultType="java.util.Map" parameterType="java.util.Map">
+		<![CDATA[
+		SELECT distinct a.notice_id,a.source_id,a.source_name,a.title,DATE_FORMAT(a.pub_time,'%Y-%m-%d %H:%i:%s') pub_time FROM notice_info a,notice_product_info b
+		WHERE a.notice_id = b.notice_id
+		and a.notice_type_id = '2'
+		]]>
+		<include refid="noticelist_condition" />
+		order by pub_time desc,a.title
+	</select>
+	<!-- 资格预审公告 -->
+	<select id="zgyslist" resultType="java.util.Map" parameterType="java.util.Map">
+		<![CDATA[
+		SELECT distinct a.notice_id,a.source_id,a.source_name,a.title,DATE_FORMAT(a.pub_time,'%Y-%m-%d %H:%i:%s') pub_time FROM notice_info a,notice_product_info b
+		WHERE a.notice_id = b.notice_id 
+		AND a.notice_type_id = '3'
+		]]>
+		<include refid="noticelist_condition" />
+		order by pub_time desc,a.title
+	</select>
+	<!-- 结果公示 -->
+	<select id="jggslist" resultType="java.util.Map" parameterType="java.util.Map">
+		<![CDATA[
+		SELECT distinct a.notice_id,a.source_id,a.source_name,a.title,DATE_FORMAT(a.pub_time,'%Y-%m-%d %H:%i:%s') pub_time FROM notice_info a,notice_product_info b
+		WHERE a.notice_id = b.notice_id 
+		AND a.notice_type_id = '7'
+		]]>
+		<include refid="noticelist_condition" />
+		order by pub_time desc,a.title
+	</select>
+	<!-- 单一来源采购信息公告 -->
+	<select id="dylycgxxgglist" resultType="java.util.Map"
+		parameterType="java.util.Map">
+		<![CDATA[
+		SELECT distinct a.notice_id,a.source_id,a.source_name,a.title,DATE_FORMAT(a.pub_time,'%Y-%m-%d %H:%i:%s') pub_time FROM notice_info a,notice_product_info b
+		WHERE a.notice_id = b.notice_id 
+		AND a.notice_type_id = '1'
+		]]>
+		<include refid="noticelist_condition" />
+		order by pub_time desc,a.title
+	</select>
+	<!-- 供应商信息收集 -->
+	<select id="gysxxsjlist" resultType="java.util.Map"
+		parameterType="java.util.Map">
+		<![CDATA[
+		SELECT distinct a.notice_id,a.source_id,a.source_name,a.title,DATE_FORMAT(a.pub_time,'%Y-%m-%d') pub_time FROM notice_info a,notice_product_info b
+		WHERE a.notice_id = b.notice_id 
+		AND a.notice_type_id = '99'
+		]]>
+		<include refid="noticelist_condition" />
+		order by pub_time desc,a.title
+	</select>
+	<!-- 系统消息列表 -->
+	<select id="xtxxlist" resultType="java.util.Map" parameterType="java.util.Map">
+		SELECT _id id,notice_title,DATE_FORMAT(pub_time,'%Y-%m-%d %H:%i:%s')
+		pub_time from system_notice_info
+		order by pub_time desc
+	</select>
+	<!-- 系统消息条数 -->
+	<select id="xtxxts" resultType="java.util.Map" parameterType="java.util.Map"><![CDATA[
+		SELECT COUNT(_id) count FROM system_notice_info  WHERE DATEDIFF(NOW(),pub_time)<3]]>
+	</select>
+	<!-- 系统消息详情 -->
+	<select id="xtxxdetail" resultType="java.util.Map"
+		parameterType="java.util.Map">
+		SELECT notice_title,pub_time,content from
+		system_notice_info
+		WHERE _id=#{id}
+	</select>
+	<!-- 发布周期类型 -->
+	<select id="peroidtype" resultType="java.util.Map"
+		parameterType="java.util.Map">
+		SELECT * FROM peroid_type_info order by type_order
+	</select>
+	<!-- 招标信息 -->
+	<select id="detail" resultType="java.util.Map" parameterType="java.util.Map">
+		select * from t1 where _id=#{id}
+	</select>
+
+</mapper>

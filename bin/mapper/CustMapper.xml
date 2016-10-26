@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.cmcc.es.app.mapper.CustMapper">
+
+	<resultMap type="com.cmcc.es.app.model.CustInfo" id="custInfoResultMap">
+		<result property="name" column="name" />
+		<result property="loginName" column="login_name" />
+		<result property="password" column="password" />
+		<result property="mobilePhone" column="mobile_phone" />
+		<result property="email" column="email" />
+		<result property="idType" column="id_type" />
+		<result property="idNumber" column="id_number" />
+		<result property="address" column="address" />
+		<result property="province" column="province" />
+		<result property="city" column="city" />
+		<result property="zipCode" column="zip_code" />
+		<result property="birthday" column="birthday" />
+		<result property="gender" column="gender" />
+		<result property="nationality" column="nationality" />
+		<result property="race" column="race" />
+		<result property="marriedStatus" column="married_status" />
+		<result property="education" column="education" />
+		<result property="occupation" column="occupation" />
+		<result property="salary" column="salary" />
+		<result property="nickName" column="nick_name" />
+		<result property="isPayUser" column="is_pay_user" />
+		<result property="validTimeEnd" column="valid_time_end" />
+		<result property="createTime" column="create_time" />
+	</resultMap>
+
+	<!-- cust 注册 -->
+	<insert id="saveCustInfo" parameterType="com.cmcc.es.app.model.CustInfo">
+		insert into cust_info
+		(name,login_name,password,mobile_phone,email,id_type,id_number,address,province,city,zip_code,birthday,gender,nationality,
+		race,married_status,education,occupation,salary,nick_name,is_pay_user,create_time)
+		values
+		(#{name},#{loginName},#{password},#{mobilePhone},#{email},#{idType},#{idNumber},#{address},#{province},#{city},#{zipCode},
+		#{birthday},#{gender},#{nationality},#{race},#{marriedStatus},#{education},#{occupation},#{salary},#{nickName},#{isPayUser},#{createTime})
+	</insert>
+
+	<!-- 根据手机号查询用户是否存在 -->
+	<select id="queryByMobilePhone" resultMap="custInfoResultMap"
+		parameterType="String">
+		select
+		name,login_name,mobile_phone,email,id_type,id_number,address,province,city,zip_code,birthday,gender,nationality,
+		race,married_status,education,occupation,salary,nick_name,is_pay_user,valid_time_end,create_time
+		from
+		cust_info where mobile_phone=#{mobilePhone}
+	</select>
+
+	<!-- 根据手机号和密码查询用户 -->
+	<select id="queryByMobilePhoneAndPassowrd" resultMap="custInfoResultMap"
+		parameterType="map">
+		select
+		name,login_name,password,mobile_phone,email,id_type,id_number,address,province,city,zip_code,birthday,gender,nationality,
+		race,married_status,education,occupation,salary,nick_name,is_pay_user,valid_time_end,create_time
+		from
+		cust_info where mobile_phone=#{mobilePhone} and
+		password=#{password}
+	</select>
+
+	<!-- 修改信息 -->
+	<update id="updateCustInfo" parameterType="com.cmcc.es.app.model.CustInfo">
+		update cust_info
+		<set>
+			<!-- <if test="name != null">name=#{name},</if> <if test="loginName != 
+				null">login_name=#{loginName},</if> <if test="password != null">password=#{password},</if> 
+				<if test="mobilePhone != null">mobile_phone=#{mobilePhone},</if> <if test="email 
+				!= null">email=#{email},</if> <if test="idType != null">id_type=#{idType},</if> 
+				<if test="idNumber != null">id_number=#{idNumber},</if> <if test="address 
+				!= null">address=#{address},</if> <if test="province != null">province=#{province},</if> 
+				<if test="city != null">city=#{city},</if> <if test="zipCode != null">zip_code=#{zipCode},</if> 
+				<if test="birthday != null">birthday=#{birthday},</if> <if test="gender != 
+				null">gender=#{gender},</if> <if test="nationality != null">nationality=#{nationality},</if> 
+				<if test="race != null">race=#{race},</if> <if test="marriedStatus != null">married_status=#{marriedStatus},</if> 
+				<if test="education != null">education=#{education},</if> <if test="occupation 
+				!= null">occupation=#{occupation},</if> <if test="salary != null">salary=#{salary},</if> 
+				<if test="nickName != null">nick_name=#{nickName},</if> -->
+			<if test="isPayUser != null">is_pay_user=#{isPayUser},</if>
+			<if test="validTimeEnd != null">valid_time_end=#{validTimeEnd}</if>
+		</set>
+		where mobile_phone=#{mobilePhone}
+	</update>
+
+	<!-- 修改密码 -->
+	<update id="modifyPassword" parameterType="com.cmcc.es.app.model.CustInfo">
+		update cust_info
+		<set>
+			<if test="password != null and password != '' ">password=#{password}</if>
+		</set>
+		where mobile_phone=#{mobilePhone}
+	</update>
+</mapper>

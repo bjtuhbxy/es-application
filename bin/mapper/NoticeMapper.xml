@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.cmcc.es.app.mapper.NoticeMapper">
+	<!-- 公告信息resultMap -->
+	<resultMap type="com.cmcc.es.app.model.NoticeInfo" id="noticeResultMap">
+		<result column="notice_id" property="noticeId" />
+		<result column="content" property="content" />
+		<collection property="attachments" column="notice_id"
+			ofType="com.cmcc.es.app.model.Attachment" select="listAttach" />
+	</resultMap>
+	<!-- 附件resultMap -->
+	<resultMap type="com.cmcc.es.app.model.Attachment" id="attachmentResultMap">
+		<result column="attachment_type" property="attachmentType" />
+		<result column="attachment_mode" property="attachmentMode" />
+		<result column="attachement_url" property="attachmentUrl" />
+		<result column="attachment_name" property="attachmentName" />
+	</resultMap>
+	<!-- 即将开标详情 -->
+	<!-- <select id="jjkbdetail" resultType="java.util.Map" parameterType="java.util.Map"> 
+		SELECT * FROM notice_detail_info WHERE notice_id=#{notice_id} </select> -->
+	<!-- 正在招标详情 -->
+	<select id="getDetail" resultMap="noticeResultMap"
+		parameterType="java.util.Map">
+		SELECT
+		a.notice_id,a.content
+		FROM notice_detail_info a
+		inner join
+		notice_info b WHERE
+		a.notice_id = b.notice_id and
+		a.notice_id=#{0}
+	</select>
+	<!-- 获取附件列表 -->
+	<select id="listAttach" resultMap="attachmentResultMap"
+		parameterType="String">
+		SELECT
+		attachment_type,attachment_mode,attachement_url,attachment_name FROM
+		notice_attachment_info WHERE
+		notice_id=#{0}
+	</select>
+	<!-- 保存公告信息 -->
+	<insert id="saveNoticeList" parameterType="java.util.List">
+		INSERT INTO notice_info (
+		item_id,
+		notice_id,
+		project_name,
+		project_code,
+		title,
+		pub_time,
+		pub_person,
+		notice_type_id,
+		notice_type_name,
+		source_id,
+		source_name,
+		tender_sale_deadline,
+		back_date,
+		start_time,
+		end_time
+		)
+		VALUES
+		<foreach collection="list" item="item" index="index"
+			separator=",">
+			(#{item.itemId},#{item.noticeId},#{item.projectName},#{item.projectCode},#{item.title},
+			#{item.pubTime},#{item.pubPerson},#{item.noticeTypeId},#{item.noticeTypeName},#{item.sourceId},
+			#{item.sourceName},#{item.tenderSaleDeadline},#{item.backDate},#{item.startTime},#{item.endTime})
+		</foreach>
+	</insert>
+	<!-- 保存公告详情 -->
+	<insert id="saveNoticeDetailList" parameterType="java.util.List">
+		INSERT INTO notice_detail_info
+		(notice_id,content)
+		VALUES
+		<foreach collection="list" item="item" index="index"
+			separator=",">
+			(#{item.noticeId},#{item.content})
+		</foreach>
+	</insert>
+	<!-- 保存公告关联产品详情 -->
+	<insert id="saveNoticeProductList" parameterType="java.util.List">
+		INSERT INTO notice_product_info (
+		notice_id,
+		catalog_big_id,
+		catalog_big_name,
+		catalog_middle_id,
+		catalog_middle_name,
+		catalog_small_id,
+		catalog_small_name,
+		product_id,
+		product_name)
+		VALUES
+		<foreach collection="list" item="item" index="index"
+			separator=",">
+			(#{item.noticeId},#{item.catalogBigId},#{item.catalogBigName},#{item.catalogMiddleId},
+			#{item.catalogMiddleName},#{item.catalogSmallId},#{item.catalogSmallName},
+			#{item.productId},#{item.productName})
+		</foreach>
+	</insert>
+	<!-- 保存公告关联附件详情 -->
+	<insert id="saveNoticeAttachmentList" parameterType="java.util.List">
+		INSERT INTO notice_attachment_info (
+		notice_id,
+		attachment_type,
+		attachment_mode,
+		attachement_url,
+		attachment_name)
+		VALUES
+		<foreach collection="list" item="item" index="index"
+			separator=",">
+			(#{item.noticeId},#{item.attachmentType},#{item.attachmentMode},
+			#{item.attachmentUrl},#{item.attachmentName})
+		</foreach>
+	</insert>
+</mapper>

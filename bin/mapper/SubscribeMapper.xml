@@ -1,0 +1,135 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.cmcc.es.app.mapper.SubscribeMapper">
+
+	<resultMap type="com.cmcc.es.app.model.SubscribeInfo" id="subscribeInfoResultMap">
+		<id property="subscribeId" column="subscribe_id" />
+		<result property="subscribeName" column="subscribe_name" />
+		<result property="subscribeUser" column="subscribe_user" />
+		<result property="keywords" column="keywords" />
+		<result property="peroidTypeName" column="peroid_type_name" />
+		<result property="peroidTypeId" column="peroid_type_id" />
+		<result property="createTime" column="create_time" />
+		<result property="updateTime" column="update_time" />
+		<collection property="regions" column="subscribe_id"
+			select="querySubscribeRegionList" />
+		<collection property="catalogs" column="subscribe_id"
+			select="querySubscribeCatalogList" />
+	</resultMap>
+	<resultMap type="com.cmcc.es.app.model.Region" id="subscribeRegionResutMap">
+		<id property="id" column="_id" />
+		<result property="subscribeId" column="subscribe_id" />
+		<result property="regionId" column="region_id" />
+		<result property="regionName" column="region_name" />
+	</resultMap>
+	<resultMap type="com.cmcc.es.app.model.SubscribeCatalog" id="subscribeCatalogResutMap">
+		<id property="id" column="_id" />
+		<result property="subscribeId" column="subscribe_id" />
+		<result property="catalogBigId" column="catalog_big_id" />
+		<result property="catalogBigName" column="catalog_big_name" />
+		<result property="catalogMiddleId" column="catalog_middle_id" />
+		<result property="catalogMiddleName" column="catalog_middle_name" />
+		<result property="catalogSmallId" column="catalog_small_id" />
+		<result property="catalogSmallName" column="catalog_small_name" />
+	</resultMap>
+	<!-- 获取订阅器 -->
+	<select id="getSubscribe" resultMap="subscribeInfoResultMap">
+		SELECT
+		a.subscribe_id,a.subscribe_name,a.subscribe_user,a.keywords,b.peroid_type_id,b.peroid_type_name
+		FROM subscribe_info a,peroid_type_info b
+		WHERE a.subscribe_id = #{0}
+		AND a.publish_peroid_type = b.peroid_type_id
+		AND a.subscribe_user = #{1}
+	</select>
+	<!-- 查询订阅器列表 -->
+	<select id="querySubscribeList" parameterType="String"
+		resultMap="subscribeInfoResultMap">
+		SELECT
+		a.subscribe_id,a.subscribe_name,a.subscribe_user,a.keywords,b.peroid_type_id,b.peroid_type_name
+		FROM subscribe_info a,peroid_type_info b
+		WHERE a.subscribe_user = #{userId} and a.publish_peroid_type =
+		b.peroid_type_id
+	</select>
+	<!-- 查询 -->
+	<select id="querySubscribeRegionList" parameterType="String"
+		resultMap="subscribeRegionResutMap">
+		SELECT * FROM subscribe_region where subscribe_id = #{subscribe_id}
+	</select>
+	<select id="querySubscribeCatalogList" parameterType="String"
+		resultMap="subscribeCatalogResutMap">
+		SELECT * FROM subscribe_catalog where subscribe_id = #{subscribe_id}
+	</select>
+	<!-- 保存订阅信息 -->
+	<insert id="saveSubscribe" parameterType="com.cmcc.es.app.model.SubscribeInfo">
+		INSERT INTO subscribe_info (
+		subscribe_id,
+		subscribe_name,
+		subscribe_user,
+		keywords,
+		publish_peroid_type,
+		create_time
+		)
+		VALUES
+		(#{subscribeId},#{subscribeName},#{subscribeUser},#{keywords},#{peroidTypeId},#{createTime})
+	</insert>
+	<!-- 更新订阅信息 -->
+	<update id="updateSubscribe" parameterType="com.cmcc.es.app.model.SubscribeInfo">
+		UPDATE subscribe_info SET
+		subscribe_name = #{subscribeName},
+		keywords = #{keywords},
+		publish_peroid_type = #{peroidTypeId}
+		WHERE
+		subscribe_id = #{subscribeId}
+	</update>
+	<!-- 删除订阅器 -->
+	<delete id="deleteSubscribe">
+		DELETE FROM subscribe_info
+		where subscribe_id = #{0} AND subscribe_user = #{1}
+	</delete>
+	<!-- 保存订阅器区域信息 -->
+	<insert id="saveSubscribeRegion" parameterType="java.util.List">
+		INSERT INTO subscribe_region (
+		subscribe_id,
+		region_id,
+		region_name
+		)
+		VALUES
+		<foreach collection="list" item="item" index="index"
+			separator=",">
+			(#{item.subscribeId},#{item.regionId},#{item.regionName})
+		</foreach>
+	</insert>
+	<!-- 删除订阅器区域信息 -->
+	<delete id="deleteSubscribeRegion">
+		DELETE FROM subscribe_region
+		WHERE subscribe_id = #{0}
+	</delete>
+	<!-- 保存订阅器采购目录信息 -->
+	<insert id="saveSubscribeCatalog" parameterType="java.util.List">
+		INSERT INTO subscribe_catalog (
+		subscribe_id,
+		catalog_big_id,
+		catalog_big_name,
+		catalog_middle_id,
+		catalog_middle_name,
+		catalog_small_id,
+		catalog_small_name
+		)
+		VALUES
+		<foreach collection="list" item="item" index="index"
+			separator=",">
+			(#{item.subscribeId},
+			#{item.catalogBigId},
+			#{item.catalogBigName},
+			#{item.catalogMiddleId},
+			#{item.catalogMiddleName},
+			#{item.catalogSmallId},
+			#{item.catalogSmallName})
+		</foreach>
+	</insert>
+	<!-- 删除订阅器采购目录信息 -->
+	<delete id="deleteSubscribeCatalog">
+		DELETE FROM subscribe_catalog
+		WHERE subscribe_id = #{0}
+	</delete>
+</mapper>

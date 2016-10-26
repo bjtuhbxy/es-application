@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.cmcc.es.app.mapper.VeriCodeMapper">
+
+	<resultMap type="com.cmcc.es.app.model.VeriCode" id="VeriCodeResultMap">
+		<result property="id" column="_id" />
+		<result property="code" column="code" />
+		<result property="mobilePhone" column="mobile_phone" />
+		<result property="serviceType" column="service_type" />
+		<result property="loginName" column="login_name" />
+		<result property="createTime" column="creat_time" />
+	</resultMap>
+
+	<!-- 保存验证码信息 -->
+	<insert id="saveVeriCode" parameterType="com.cmcc.es.app.model.VeriCode">
+		insert into veri_code
+		(code,mobile_phone,service_type,login_name,creat_time) values
+		(#{code},#{mobilePhone},#{serviceType},#{loginName},#{createTime})
+	</insert>
+
+	<!-- 根据手机号和服务类型查询出最后一条数据 -->
+	<select id="queryLastCodeInfo" resultMap="VeriCodeResultMap"
+		parameterType="com.cmcc.es.app.model.VeriCode">
+		SELECT
+		_id,code,mobile_phone,service_type,login_name,creat_time
+		FROM veri_code
+		WHERE service_type=#{serviceType} AND
+		mobile_phone=#{mobilePhone}
+		AND
+		creat_time > DATE_ADD(now(),INTERVAL -#{peroid} MINUTE)
+		ORDER BY
+		creat_time DESC LIMIT 1;
+	</select>
+	<!-- 删除验证码 -->
+	<delete id="delCode" parameterType="string">
+		DELETE FROM veri_code WHERE _id = #{0}
+	</delete>
+
+</mapper>

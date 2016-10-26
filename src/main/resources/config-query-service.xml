@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"  
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:p="http://www.springframework.org/schema/p"  
+    xmlns:context="http://www.springframework.org/schema/context"  
+    xmlns:jee="http://www.springframework.org/schema/jee" xmlns:tx="http://www.springframework.org/schema/tx"  
+    xmlns:aop="http://www.springframework.org/schema/aop"  
+    xsi:schemaLocation="  
+            http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd  
+            http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd">  
+    
+    <context:property-placeholder location="classpath:redis.properties" />
+	
+	<bean class="org.springframework.data.redis.cache.RedisCacheManager">
+		<!-- <constructor-arg name="redisOperations" ref="redisTemplate"/> -->
+		<constructor-arg index="0" ref="redisTemplate"/><!-- 使用构造方法注入一定要查看此类的构造方法中的参数形式进行注入， 不可随便注入参数 -->
+		<property name="defaultExpiration" value="${spring.redis.default.expiration}"/>
+	</bean>
+</beans>              
